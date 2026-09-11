@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリを取得する
+        uses: actions/checkout@v4
+
+      - name: PHP をセットアップする
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+
+      - name: Composer の依存を入れる
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: .env を用意する
+        run: cp .env.example .env
+
+      - name: APP_KEY を生成する
+        run: php artisan key:generate
+
+      - name: テストを実行する
+        run: php artisan test
