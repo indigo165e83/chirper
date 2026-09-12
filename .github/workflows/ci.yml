@@ -29,5 +29,16 @@ jobs:
       - name: APP_KEY を生成する
         run: php artisan key:generate
 
+      - name: Node をセットアップする
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: フロントエンドをビルドする
+        run: |
+          npm ci
+          npm run build
+
       - name: テストを実行する
         run: php artisan test
