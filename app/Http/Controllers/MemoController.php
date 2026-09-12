@@ -22,7 +22,7 @@ class MemoController extends Controller
      */
     public function create()
     {
-        //
+        return view('memos.create');
     }
 
     /**
@@ -30,7 +30,22 @@ class MemoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validate the request
+        $validated = $request->validate([
+            'title' => 'required|string|max:100',
+            'body' => 'required|string|max:1000',
+            'is_draft' => 'boolean',
+        ],[
+            'title.required' => 'Please enter a title for your memo!',
+            'title.max' => 'Titles must be 100 characters or less.',
+            'body.required' => 'Please write something for your memo!',
+            'body.max' => 'Memos must be 1000 characters or less.',
+        ]);
+
+        // Create the memo
+        auth()->user()->memos()->create($validated);
+
+        return redirect()->route('memos.index')->with('success', 'Your memo has been created!');
     }
 
     /**
