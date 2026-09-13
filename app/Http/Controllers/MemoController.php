@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Memo;
-use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Http\Requests\StoreMemoRequest;
+use App\Http\Requests\UpdateMemoRequest;
 
 class MemoController extends Controller
 {
@@ -34,8 +34,8 @@ class MemoController extends Controller
      */
     public function store(StoreMemoRequest $request)
     {
+        // 作成は対象が存在しないため所有判定は不要。未ログインは auth ミドルウェアが弾く
         $validated = $request->validated();
-        // Create the memo
         auth()->user()->memos()->create($validated);
 
         return redirect()->route('memos.index')->with('success', 'Your memo has been created!');
@@ -61,23 +61,10 @@ class MemoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Memo $memo)
+    public function update(UpdateMemoRequest $request, Memo $memo)
     {
-        $this->authorize('update', $memo);
-
-        // Validate the request
-        $validated = $request->validate([
-            'title' => 'required|string|max:100',
-            'body' => 'required|string|max:1000',
-            'is_draft' => 'boolean',
-        ],[
-            'title.required' => 'Please enter a title for your memo!',
-            'title.max' => 'Titles must be 100 characters or less.',
-            'body.required' => 'Please write something for your memo!',
-            'body.max' => 'Memos must be 1000 characters or less.',
-        ]);
-
-        // Update the memo
+        // 認可は UpdateMemoRequest::authorize() で行う（検証より先に 403 を返すため）
+        $validated = $request->validated();
         $memo->update($validated);
         return redirect()->route('memos.index')->with('success', 'Your memo has been updated!');
     }
