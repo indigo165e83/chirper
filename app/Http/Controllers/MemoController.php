@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Memo;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class MemoController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -61,7 +63,8 @@ class MemoController extends Controller
      */
     public function edit(Memo $memo)
     {
-        //
+        $this->authorize('update', $memo);
+        return view('memos.edit', ['memo' => $memo]);
     }
 
     /**
@@ -69,7 +72,23 @@ class MemoController extends Controller
      */
     public function update(Request $request, Memo $memo)
     {
-        //
+        $this->authorize('update', $memo);
+
+        // Validate the request
+        $validated = $request->validate([
+            'title' => 'required|string|max:100',
+            'body' => 'required|string|max:1000',
+            'is_draft' => 'boolean',
+        ],[
+            'title.required' => 'Please enter a title for your memo!',
+            'title.max' => 'Titles must be 100 characters or less.',
+            'body.required' => 'Please write something for your memo!',
+            'body.max' => 'Memos must be 1000 characters or less.',
+        ]);
+
+        // Update the memo
+        $memo->update($validated);
+        return redirect()->route('memos.index')->with('success', 'Your memo has been updated!');
     }
 
     /**
@@ -77,6 +96,8 @@ class MemoController extends Controller
      */
     public function destroy(Memo $memo)
     {
-        //
+        $this->authorize('delete', $memo);
+        $memo->delete();
+        return redirect()->route('memos.index')->with('success', 'Your memo has been deleted!');
     }
 }
