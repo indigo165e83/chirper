@@ -105,4 +105,26 @@ class MemoTest extends TestCase
         $this->assertDatabaseCount('memos', 0);
     }
 
+    /** 
+     * 自分のメモなら 200 を返す
+     */
+    public function testEdit_myMemo_returns200(): void
+    {
+        $user = User::factory()->create();
+        $myMemo = Memo::factory()->for($user)->create(['title' => 'My Memo']);
+        $response = $this->actingAs($user)->get(route('memos.edit', $myMemo));
+        $response->assertOk();
+    }
+
+    /** 
+     * 他人のメモなら 403 を返す
+     */
+    public function testEdit_othersMemo_returns403(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $otherMemo = Memo::factory()->for($otherUser)->create(['title' => 'Other User Memo']);
+        $response = $this->actingAs($user)->get(route('memos.edit', $otherMemo));
+        $response->assertStatus(403);
+    }
 }
