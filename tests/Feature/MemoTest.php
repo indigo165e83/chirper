@@ -56,4 +56,53 @@ class MemoTest extends TestCase
         $response->assertSee($myMemo->title);
         $response->assertDontSee($otherMemo->title);
     }
+
+    /** 
+     * 正しい入力で作成でき、一覧へリダイレクトされる
+     * 作成されたメモの user_id がログイン中のユーザーになっている
+     */
+    public function testStore_loggedIn_redirectsToIndex(): void
+    {
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->post('/memos', [
+            'title' => 'Test Memo',
+            'body' => 'Test Content',
+            'is_draft' => 0,
+        ]);
+        $response->assertRedirectToRoute('memos.index');
+
+        $this->assertDatabaseHas('memos', [
+            'title' => 'Test Memo',
+            'body' => 'Test Content',
+            'user_id' => $user->id,
+        ]);
+    }
+    /** 
+     * title が空だとエラーになり、作成されない
+     */
+    public function testStore_emptyTitle_hasErrorsAndDoesNotCreate(): void
+    {
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->post('/memos', [
+            'title' => '',
+            'body' => 'Test Content',
+        ]);
+        $response->assertSessionHasErrors('title');
+        $this->assertDatabaseCount('memos', 0);
+    }
+
+    /** 
+     * title が101文字だとエラーになる
+     */
+    public function testStore_titleOver100_hasErrorsAndDoesNotCreate(): void
+    {
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->post('/memos', [
+            'title' => str_repeat('a', 101),
+            'body' => 'Test Content',
+        ]);
+        $response->assertSessionHasErrors('title');
+        $this->assertDatabaseCount('memos', 0);
+    }
+
 }
