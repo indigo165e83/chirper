@@ -187,4 +187,34 @@ class MemoTest extends TestCase
             '他人のメモの updated_at が変わっていないこと'
         );
     }
+
+    /**
+     * 自分のメモを削除でき、他人のメモは残る
+     */
+    public function testDestroy_myMemo_deletesOwnMemoOnly(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $myMemo = Memo::factory()->for($user)->create();
+        $otherMemo = Memo::factory()->for($otherUser)->create();
+
+        $response = $this->actingAs($user)->delete(route('memos.destroy', $myMemo));
+
+        $response->assertRedirectToRoute('memos.index');
+        $this->assertDatabaseMissing('memos', ['id' => $myMemo->id]);
+        $this->assertDatabaseHas('memos', ['id' => $otherMemo->id]);
+    }
+
+    /**
+     * 他人のメモへの削除は 403 で、DB に残っている
+     */
+    public function test_destroy_others_memo_returns403_and_does_not_delete(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $otherMemo = Memo::factory()->for($otherUser)->create();
+        $response = $this->actingAs($user)->delete(route('memos.destroy', $otherMemo));
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('memos', ['id' => $otherMemo->id]);
+    }
 }
