@@ -53,4 +53,20 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    /** パスワードが違うとログインできず、email にエラーが出る */
+    public function testLogin_wrongPassword_hasErrorsAndStaysGuest(): void
+    {
+        $password = 'password123';
+        $user = User::factory()->create([
+            'password' => $password,
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'wrongpassword',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
 }
