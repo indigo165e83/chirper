@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -34,4 +35,22 @@ class AuthenticationTest extends TestCase
 
         $response->assertOk();
     }
+
+    /** 正しいメールアドレスとパスワードでログインできる */
+    public function testLogin_validCredentials_authenticatesAndRedirectsToRoot(): void
+    {
+        $password = 'password123';
+        $user = User::factory()->create([
+            'password' => $password,
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => $password,
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertAuthenticatedAs($user);
+    }
+
 }
