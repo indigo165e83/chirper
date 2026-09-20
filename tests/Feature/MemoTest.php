@@ -24,14 +24,14 @@ class MemoTest extends TestCase
     use RefreshDatabase;
 
     /** 未ログインなら一覧はログイン画面へリダイレクトされる */
-    public function test_index_guest_redirects_to_login(): void
+    public function testIndex_guest_redirectsToLogin(): void
     {
         $response = $this->get('/memos');
         $response->assertRedirect(route('login'));
     }
 
     /** ログイン済みなら 200 を返す */
-    public function test_index_logged_in_returns200(): void
+    public function testIndex_loggedIn_returns200(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get('/memos');
@@ -42,7 +42,7 @@ class MemoTest extends TestCase
      * 自分のメモが一覧に表示される
      * 他人のメモが表示されない
      */
-    public function test_index_logged_in_shows_only_own_memos(): void
+    public function testIndex_loggedIn_showsOnlyOwnMemos(): void
     {
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
@@ -61,7 +61,7 @@ class MemoTest extends TestCase
      * 正しい入力で作成でき、一覧へリダイレクトされる
      * 作成されたメモの user_id がログイン中のユーザーになっている
      */
-    public function test_store_logged_in_redirects_to_index(): void
+    public function testStore_loggedIn_redirectsToIndex(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->post('/memos', [
@@ -81,7 +81,7 @@ class MemoTest extends TestCase
     /**
      * title が空だとエラーになり、作成されない
      */
-    public function test_store_empty_title_has_errors_and_does_not_create(): void
+    public function testStore_emptyTitle_hasErrorsAndDoesNotCreate(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->post('/memos', [
@@ -95,7 +95,7 @@ class MemoTest extends TestCase
     /**
      * title が101文字だとエラーになる
      */
-    public function test_store_title_over100_has_errors_and_does_not_create(): void
+    public function testStore_titleOver100_hasErrorsAndDoesNotCreate(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->post('/memos', [
@@ -109,7 +109,7 @@ class MemoTest extends TestCase
     /**
      * 自分のメモなら 200 を返す
      */
-    public function test_edit_my_memo_returns200(): void
+    public function testEdit_myMemo_returns200(): void
     {
         $user = User::factory()->create();
         $myMemo = Memo::factory()->for($user)->create(['title' => 'My Memo']);
@@ -120,7 +120,7 @@ class MemoTest extends TestCase
     /**
      * 他人のメモなら 403 を返す
      */
-    public function test_edit_others_memo_returns403(): void
+    public function testEdit_othersMemo_returns403(): void
     {
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
@@ -132,7 +132,7 @@ class MemoTest extends TestCase
     /**
      * 自分のメモを更新できる
      */
-    public function test_update_my_memo_redirects_to_index(): void
+    public function testUpdate_myMemo_redirectsToIndex(): void
     {
         $user = User::factory()->create();
         $myMemo = Memo::factory()->for($user)->create(['title' => 'Old Title', 'body' => 'Old Body']);
@@ -157,7 +157,7 @@ class MemoTest extends TestCase
      *
      * updated_at も変わらないことまで見る（403 を返しつつ書き込む実装を検出するため）
      */
-    public function test_update_others_memo_returns403_and_does_not_update(): void
+    public function testUpdate_othersMemo_returns403AndDoesNotUpdate(): void
     {
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
@@ -208,7 +208,7 @@ class MemoTest extends TestCase
     /**
      * 他人のメモへの削除は 403 で、DB に残っている
      */
-    public function test_destroy_others_memo_returns403_and_does_not_delete(): void
+    public function testDestroy_othersMemo_returns403AndDoesNotDelete(): void
     {
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
