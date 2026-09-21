@@ -9,12 +9,15 @@ use Tests\TestCase;
 /**
  * 認証の Feature テスト（#12）
  *
- * - ログイン画面（未ログイン → 200 ／ ログイン済み → guest ミドルウェアで / へ）
- * - auth ミドルウェア（未ログイン → ログイン画面へリダイレクト）
+ * - ログイン画面（未ログイン → 200）
  * - Auth::attempt()（正しい資格情報 → ログイン成立し / へ ／ 誤り → email にエラー、未ログインのまま）
- * - intended()（弾かれたページがあればそこへ、無ければ / へ）
- * - session()->regenerate()（ログイン前後でセッションIDが変わる）
  * - ログアウト（セッションが破棄され、未ログインに戻る）
+ *
+ * - auth ミドルウェア（未ログイン → ログイン画面へリダイレクト）
+ * - guest ミドルウェア（ログイン済み → / へリダイレクト）
+ * - intended()（弾かれたページがあればそこへ、無ければ / へ）
+ *
+ * - session()->regenerate()（ログイン前後でセッションIDが変わる）
  *
  * 対象外:
  * - 新規登録（register）
@@ -27,6 +30,8 @@ use Tests\TestCase;
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    // ---- ログイン・ログアウト（Auth\Login / Auth\Logout） ----
 
     /** ログイン画面が表示される */
     public function testLoginScreen_guest_returns200(): void
@@ -98,4 +103,9 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect('/');
         $this->assertGuest();
     }
+
+    // ---- 入口の制御（auth / guest ミドルウェア・intended） ----
+
+    // ---- セッション（session()->regenerate()） ----
+
 }
