@@ -66,7 +66,23 @@ class AuthenticationTest extends TestCase
             'password' => 'wrongpassword',
         ]);
 
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors(['email' => 'The provided credentials do not match our records.']);
+        $this->assertGuest();
+    }
+
+    /**
+     * 存在しないメールアドレスでもログインできず、同じエラーキーになる
+     *
+     * パスワード誤りと同じ応答にすることで、メールアドレスの登録有無を外部から推測できないようにする（アカウント列挙の防止）
+     */
+    public function testLogin_nonExistentEmail_hasErrorsAndStaysGuest(): void
+    {
+        $response = $this->post('/login', [
+            'email' => 'nonexistent@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors(['email' => 'The provided credentials do not match our records.']);
         $this->assertGuest();
     }
 }
