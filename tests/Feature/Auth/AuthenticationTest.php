@@ -85,4 +85,17 @@ class AuthenticationTest extends TestCase
         $response->assertSessionHasErrors(['email' => 'The provided credentials do not match our records.']);
         $this->assertGuest();
     }
+
+    /** ログアウトできる */
+    public function testLogout_loggedIn_becomesGuestAndRedirectsToRoot(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->assertAuthenticatedAs($user);
+
+        $response = $this->post(route('logout'));
+
+        $response->assertRedirect('/');
+        $this->assertGuest();
+    }
 }
