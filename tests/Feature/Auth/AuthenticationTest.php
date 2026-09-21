@@ -36,7 +36,7 @@ class AuthenticationTest extends TestCase
     /** ログイン画面が表示される */
     public function testLoginScreen_guest_returns200(): void
     {
-        $response = $this->get('/login');
+        $response = $this->get(route('login'));
 
         $response->assertOk();
     }
@@ -105,6 +105,18 @@ class AuthenticationTest extends TestCase
     }
 
     // ---- 入口の制御（auth / guest ミドルウェア・intended） ----
+
+    /**
+     * 未ログインで保護されたページへ行くとログイン画面へリダイレクトされる（auth）
+     *
+     * MemoTest::testIndex_guest_redirectsToLogin() と同じ振る舞いを、auth ミドルウェアの視点で検証する
+     */
+    public function testAuthMiddleware_guest_redirectsToLogin(): void
+    {
+        $response = $this->get(route('memos.index'));
+
+        $response->assertRedirect(route('login'));
+    }
 
     // ---- セッション（session()->regenerate()） ----
 
