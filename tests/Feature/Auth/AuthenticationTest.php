@@ -14,8 +14,8 @@ use Tests\TestCase;
  * - ログアウト（セッションが破棄され、未ログインに戻る）
  *
  * - auth ミドルウェア（未ログイン → ログイン画面へリダイレクト）
- * - guest ミドルウェア（ログイン済み → / へリダイレクト）
  * - intended()（弾かれたページがあればそこへ、無ければ / へ）
+ * - guest ミドルウェア（ログイン済み → / へリダイレクト）
  *
  * - session()->regenerate()（ログイン前後でセッションIDが変わる）
  *
@@ -104,7 +104,7 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    // ---- 入口の制御（auth / guest ミドルウェア・intended） ----
+    // ---- 入口の制御（auth ミドルウェア / intended / guest ミドルウェア） ----
 
     /**
      * 未ログインで保護されたページへ行くとログイン画面へリダイレクトされる（auth）
@@ -116,6 +116,28 @@ class AuthenticationTest extends TestCase
         $response = $this->get(route('memos.index'));
 
         $response->assertRedirect(route('login'));
+    }
+
+    /** ログイン後、元々行こうとしたページへ戻される（intended） */
+    public function testLogin_fromProtectedPage_redirectsToIntendedPage(): void
+    {
+        $password = 'password123';
+        $user = User::factory()->create([
+            'password' => $password,
+        ]);
+
+        // 未ログインで保護されたページへ行き、弾かれる（行き先がセッションに保存される）
+        $response = $this->get(route('memos.index'));
+        $response->assertRedirect(route('login'));
+
+        // ログインする
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => $password,
+        ]);
+
+        $response->assertRedirect(route('memos.index'));
+        $this->assertAuthenticatedAs($user);
     }
 
     // ---- セッション（session()->regenerate()） ----
