@@ -54,4 +54,18 @@ class ChirpTest extends TestCase
         $otherChirp->refresh();  // DB から読み直す
         $this->assertEquals($originalMessage, $otherChirp->message, 'message の内容が変わらないこと');
     }
+
+    /** 他人の Chirp の削除は 403 を返し、DB に残る */
+    public function testDestroy_othersChirp_returns403AndDoesNotDelete(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $otherChirp = Chirp::factory()->for($otherUser)->create();
+        $this->assertTrue($otherChirp->user->is($otherUser), '前提: Chirp の持ち主が $otherUser であること');
+
+        $response = $this->actingAs($user)->delete("/chirps/{$otherChirp->id}");
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('chirps', ['id' => $otherChirp->id]);
+    }
 }
