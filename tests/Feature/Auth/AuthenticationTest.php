@@ -140,6 +140,19 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    /** ログイン済みでログイン画面にアクセスするとリダイレクトされる（guest） */
+    public function testGuestMiddleware_loggedIn_redirectsToRoot(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->assertAuthenticatedAs($user);
+
+        $response = $this->get(route('login'));
+
+        $response->assertRedirect('/');
+        $this->assertAuthenticatedAs($user);
+    }
+
     // ---- セッション（session()->regenerate()） ----
 
 }
