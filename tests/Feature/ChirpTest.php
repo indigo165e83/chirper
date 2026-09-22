@@ -36,4 +36,22 @@ class ChirpTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    /** 他人の Chirp への更新は 403 を返し、DB が変わらない */
+    public function testUpdate_othersChirp_returns403AndDoesNotUpdate(): void
+    {
+        $originalMessage = 'Old message';
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $otherChirp = Chirp::factory()->for($otherUser)->create(['message' => $originalMessage]);
+        $this->assertTrue($otherChirp->user->is($otherUser), '前提: Chirp の持ち主が $otherUser であること');
+
+        $response = $this->actingAs($user)->put("/chirps/{$otherChirp->id}", [
+            'message' => 'Updated message',
+        ]);
+
+        $response->assertStatus(403);
+        $otherChirp->refresh();  // DB から読み直す
+        $this->assertEquals($originalMessage, $otherChirp->message, 'message の内容が変わらないこと');
+    }
 }
