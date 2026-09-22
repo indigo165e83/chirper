@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Illuminate\Support\Str;
 
 /**
  * 認証の Feature テスト（#12）
@@ -17,7 +18,7 @@ use Tests\TestCase;
  * - intended()（弾かれたページがあればそこへ、無ければ / へ）
  * - guest ミドルウェア（ログイン済み → / へリダイレクト）
  *
- * - session()->regenerate()（ログイン前後でセッションIDが変わる）
+ * - セッション ID（ログイン前後で振り直される）
  *
  * 対象外:
  * - 新規登録（register）
@@ -153,6 +154,35 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    // ---- セッション（session()->regenerate()） ----
+    // ---- セッション（ログイン時の ID 振り直し） ----
+
+    /**
+     * ログインの前後でセッション ID が変わる（セッション固定攻撃対策）
+     *
+     * テストのリクエストは Cookie を引き継がないため、何もしないと毎回新しいセッション ID が振られ、
+     * ID が変わったかどうかを判定できない。withCookie() で既知の ID を持たせて送ることで判定する。
+     *
+     * ID の振り直しは SessionGuard::updateSession() と Auth\Login の regenerate() の両方が行う。
+     * どちらか片方を消してもこのテストは落ちない（振る舞いが変わらないため）
+     */
+    public function testLogin_validCredentials_regeneratesSessionId(): void
+    {
+        $password = 'password123';
+        $user = User::factory()->create([
+            'password' => $password,
+        ]);
+
+        // ブラウザがセッション Cookie を持ってきた状態を再現する
+        $before = Str::random(40);
+
+        $this->withCookie(config('session.cookie'), $before) 
+            ->post('/login', [
+                'email' => $user->email,
+                'password' => $password,
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotEquals($before, session()->getId());
+    }
 
 }
